@@ -9,7 +9,7 @@ from src.ta_util import TAUtil
 
 
 def get_ohlc_data(ticker, end_date, period):
-    csv_filename = f"{ticker}_ohlc_data.csv"
+    csv_filename =f"data/{ticker}_ohlc_data.csv"
 
     data = yf.download(ticker, period=period)
     data.columns = ['_'.join(col).strip() for col in data.columns.values]
