@@ -83,27 +83,26 @@ class MACDAnalyzer:
         Get MACD buy/sell signal for the last candle
         """
         last_signal = None
-        last_index = data.index[-1]
 
         if data['Signal_Cross'].iloc[-1] > 0:
-            last_signal = (last_index, 'Buy', 'Trend Reversal Signal')
+            last_signal = ( 'Buy', 'Trend Reversal Signal')
         elif data['Signal_Cross'].iloc[-1] < 0:
-            last_signal = (last_index, 'Sell', 'Trend Reversal Signal')
+            last_signal = ('Sell', 'Trend Reversal Signal')
 
         if data['Histogram'].iloc[-1] > 0 and data['Histogram'].iloc[-1] > data['Histogram'].iloc[-2]:
-            last_signal = (last_index, 'Buy', 'Momentum Confirmation')
+            last_signal = ('Buy', 'Momentum Confirmation')
         elif data['Histogram'].iloc[-1] < 0 and data['Histogram'].iloc[-1] < data['Histogram'].iloc[-2]:
-            last_signal = (last_index, 'Sell', 'Momentum Confirmation')
+            last_signal = ('Sell', 'Momentum Confirmation')
 
         if data['Bullish_Divergence'].iloc[-1]:
-            last_signal = (last_index, 'Buy', 'Bullish Divergence')
+            last_signal = ('Buy', 'Bullish Divergence')
         elif data['Bearish_Divergence'].iloc[-1]:
-            last_signal = (last_index, 'Sell', 'Bearish Divergence')
+            last_signal = ( 'Sell', 'Bearish Divergence')
 
         if data['MACD'].iloc[-1] > 0:
-            last_signal = (last_index, 'Buy', 'Overbought Condition')
+            last_signal = ('Buy', 'Overbought Condition')
         elif data['MACD'].iloc[-1] < 0:
-            last_signal = (last_index, 'Sell', 'Oversold Condition')
+            last_signal = ('Sell', 'Oversold Condition')
 
         return last_signal
 

@@ -59,10 +59,19 @@ if __name__ == "__main__":
         macdAnalyzer = MACDAnalyzer()
 
         analyzed_data = macdAnalyzer.analyze_macd(ohlc)
-        signal = macdAnalyzer.get_last_candle_signal(ohlc)
-        print("Last Signal:", signal)
+        last_signal = macdAnalyzer.get_last_candle_signal(ohlc)
+        if last_signal:
+            signal = last_signal[0]
+            reason = last_signal[1]
+            if signal == 'Buy':
+                # TODO Add buy logic here
+                print(f"Buy Signal for {stock}: {reason}")
+            elif signal == 'Sell':
+                # TODO Add sell logic here
+                print(f"Sell Signal for {stock}: {reason}")
+
         # Plot results
         macdAnalyzer.plot_macd_analysis(analyzed_data, title=f'MACD Analysis of {stock}')
 
         print(ohlc.tail().to_string())
-        sleep(5)
+        sleep(1)
