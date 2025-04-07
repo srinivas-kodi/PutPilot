@@ -1,3 +1,4 @@
+import os
 import sys
 from datetime import datetime
 from time import sleep
@@ -5,26 +6,39 @@ from time import sleep
 import yfinance as yf
 import pandas as pd
 
+from src.macd_buy_sell import MACDAnalyzer
 from src.ta_util import TAUtil
 
 
 def get_ohlc_data(ticker, end_date, period):
-    csv_filename =f"data/{ticker}_ohlc_data.csv"
+    csv_filename = os.path.join(os.path.dirname(__file__), '..', 'data', f"{ticker}_ohlc_data.csv")
+    data = None
+    if os.path.exists(csv_filename):
+        print(f"{csv_filename} already exists.")
+        data = pd.read_csv(csv_filename)
+        # Check if the last candle is today's date
+        last_candle_date = pd.to_datetime(data['date'].iloc[-1]).date()
+        today_date = pd.to_datetime(datetime.today().strftime('%Y-%m-%d')).date()
 
-    data = yf.download(ticker, period=period)
-    data.columns = ['_'.join(col).strip() for col in data.columns.values]
-    data.rename(columns={
-        f'Close_{ticker}': 'close',
-        f'High_{ticker}': 'high',
-        f'Low_{ticker}': 'low',
-        f'Open_{ticker}': 'open',
-        f'Volume_{ticker}': 'volume'
-    }, inplace=True)
-    data.reset_index(inplace=True)
-    data.rename(columns={'Date': 'date'}, inplace=True)
-    data.to_csv(csv_filename)
-    # data = pd.read_csv(csv_filename)
-    data.set_index('date', inplace=True)
+        if last_candle_date != today_date:
+            print("The data is not current. Downloading new data.")
+            data = None
+
+    if data is None:
+        data = yf.download(ticker, period=period)
+        data.columns = ['_'.join(col).strip() for col in data.columns.values]
+        data.rename(columns={
+            f'Close_{ticker}': 'close',
+            f'High_{ticker}': 'high',
+            f'Low_{ticker}': 'low',
+            f'Open_{ticker}': 'open',
+            f'Volume_{ticker}': 'volume'
+        }, inplace=True)
+        data.reset_index(inplace=True)
+        data.rename(columns={'Date': 'date'}, inplace=True)
+        data.to_csv(csv_filename)
+        # data = pd.read_csv(csv_filename)
+        data.set_index('date', inplace=True)
     return data
 
 def check_bullish_signals(df):
@@ -42,18 +56,13 @@ if __name__ == "__main__":
     stocks = ['AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN']
     for stock in stocks:
         ohlc = get_ohlc_data(stock, today_date, '1y')
-        ohlc['rsi'] = TAUtil.rsi(ohlc, 14)
-        ohlc['macd'], ohlc['macd_signal'] = TAUtil.macd(ohlc,12, 26, 9)
+        macdAnalyzer = MACDAnalyzer()
 
-        ohlc = check_bullish_signals(ohlc)
-
-        is_rsi_bullish = ohlc['rsi_bullish'].iloc[-1]
-        is_macd_bullish = ohlc['macd_bullish'].iloc[-1]
-        print(f"{stock} RSI Bullish: {is_rsi_bullish}, MACD Bullish: {is_macd_bullish}")
-
-        if is_rsi_bullish or is_macd_bullish:
-            print(f"Buy signal for {stock} on {today_date}")
-            # Sell Put Option
+        analyzed_data = macdAnalyzer.analyze_macd(ohlc)
+        signal = macdAnalyzer.get_last_candle_signal(ohlc)
+        print("Last Signal:", signal)
+        # Plot results
+        macdAnalyzer.plot_macd_analysis(analyzed_data, title=f'MACD Analysis of {stock}')
 
         print(ohlc.tail().to_string())
         sleep(5)
